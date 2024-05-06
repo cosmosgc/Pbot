@@ -12,6 +12,8 @@ import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
+import logging
+    
 
 
 class Choice(discord.ui.View):
@@ -97,6 +99,9 @@ class Fun(commands.Cog, name="fun"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
+    logger = logging.getLogger("discord_bot")
+    logger.setLevel(logging.INFO)
+
     @commands.hybrid_command(name="randomfact", description="Get a random fact.")
     async def randomfact(self, context: Context) -> None:
         """
@@ -155,9 +160,109 @@ class Fun(commands.Cog, name="fun"):
 
         :param context: The hybrid command context.
         """
-        view = RockPaperScissorsView()
-        await context.send("Please make your choice", view=view)
+        names = self.read_words('destiny/names.txt')
+        titles = self.read_words('destiny/titles.txt')
+        aspects = self.read_words('destiny/aspect.txt')
+        Classes = self.read_words('destiny/class.txt')
+        destinies = self.read_words('destiny/destinies.txt')
+        destinations = self.read_words('destiny/destinations.txt')
 
+        name = random.choice(names)
+        title = random.choice(titles)
+        aspect = random.choice(aspects)
+        Class = random.choice(Classes)
+        destiny = random.choice(destinies)
+        destination = random.choice(destinations)
 
+        text = f"Você é {title} {name}, O {Class} {aspect}, destinado a {destiny} {destination}!"
+        await context.send(text)
+        #view = RockPaperScissorsView()
+        #await context.send("Please make your choice", view=view)
+    
+    
+    @commands.hybrid_command(
+        name="destiny", description="Generate a Destiny text."
+    )
+    async def generate_destiny_text(self, context: Context) -> None:
+        """
+        Generate a Destiny text.
+
+        :param context: The hybrid command context.
+        """
+        names = self.read_words('destiny/names.txt')
+        titles = self.read_words('destiny/titles.txt')
+        aspects = self.read_words('destiny/aspect.txt')
+        Classes = self.read_words('destiny/class.txt')
+        destinies = self.read_words('destiny/destinies.txt')
+        destinations = self.read_words('destiny/destinations.txt')
+
+        name = random.choice(names)
+        title = random.choice(titles)
+        aspect = random.choice(aspects)
+        Class = random.choice(Classes)
+        destiny = random.choice(destinies)
+        destination = random.choice(destinations)
+
+        text = f"Você é {title} {name}, O {Class} {aspect}, destinado a {destiny} {destination}!"
+        await context.send(text)
+        
+    logger.warning(f"Destiny")
+    def get_random_user(self):
+        return random.choice(self.participants)
+    
+    def remove_user(self, user):
+        self.participants.remove(user)
+        
+    
+        
+    async def run_battle_royale(self, ctx, participants):
+        await ctx.send("O Battle Royale começou!")
+        waysToDie = self.read_words('text/waystodie.txt')
+        events = []
+        while len(participants) > 1:
+            user1 = self.get_random_user()
+            user2 = self.get_random_user()
+
+            while user1 == user2:
+                user2 = self.get_random_user()
+
+            winner = random.choice([user1, user2])
+            loser = user1 if winner == user2 else user2
+            howItDied = random.choice(waysToDie)
+            events.append(f"{loser.mention} {howItDied} kill de {winner.mention}!")
+
+            self.remove_user(loser)
+
+        final_winner = participants[0]
+        events.append(f"A ultima pessoa a sobreviver foi {final_winner.mention}! O vencedor(a)!")
+        embed = discord.Embed(title="Battle Royale Results", color=discord.Color.green())
+        for event in events:
+            embed.add_field(name="Evento", value=event, inline=False)
+        # Send the Discord embed
+        await ctx.send(embed=embed)
+
+    @commands.hybrid_command(name="start_battle_royale", description="Começa um battle royale com as utlimas 10 pessoas do chat.")
+    async def start_battle_royale(self, ctx: Context):
+        # Get the last 10 users in the chat
+        #self.participants = ctx.channel.members[-10:]
+        self.participants = [member for member in ctx.channel.members if not member.bot and member != ctx.bot.user]
+        # Shuffle the participants randomly
+        #random.shuffle(self.participants)
+        # Limit the participants to the last 10 users
+        self.participants = self.participants[-10:]
+        if len(self.participants) < 2:
+            await ctx.send("There are not enough users to start a battle royale.")
+            return
+
+        # Shuffle the participants randomly
+        random.shuffle(self.participants)
+
+        # Run the battle royale
+        await self.run_battle_royale(ctx, self.participants)
+
+    def read_words(self, filename):
+            with open(filename, 'r', encoding='utf-8') as f:
+                return [word.strip() for word in f]
+        
 async def setup(bot) -> None:
     await bot.add_cog(Fun(bot))
