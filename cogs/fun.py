@@ -10,6 +10,7 @@ import random
 
 import aiohttp
 import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 import logging
@@ -160,29 +161,14 @@ class Fun(commands.Cog, name="fun"):
 
         :param context: The hybrid command context.
         """
-        names = self.read_words('destiny/names.txt')
-        titles = self.read_words('destiny/titles.txt')
-        aspects = self.read_words('destiny/aspect.txt')
-        Classes = self.read_words('destiny/class.txt')
-        destinies = self.read_words('destiny/destinies.txt')
-        destinations = self.read_words('destiny/destinations.txt')
-
-        name = random.choice(names)
-        title = random.choice(titles)
-        aspect = random.choice(aspects)
-        Class = random.choice(Classes)
-        destiny = random.choice(destinies)
-        destination = random.choice(destinations)
-
-        text = f"Você é {title} {name}, O {Class} {aspect}, destinado a {destiny} {destination}!"
-        await context.send(text)
-        #view = RockPaperScissorsView()
-        #await context.send("Please make your choice", view=view)
+        view = RockPaperScissorsView()
+        await context.send("Please make your choice", view=view)
     
     
     @commands.hybrid_command(
         name="destiny", description="Generate a Destiny text."
     )
+    @app_commands.guilds(discord.Object(id=481659634701303838))
     async def generate_destiny_text(self, context: Context) -> None:
         """
         Generate a Destiny text.
